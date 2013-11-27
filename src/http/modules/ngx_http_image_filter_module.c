@@ -1004,6 +1004,7 @@ transparent:
             ngx_int_t wdx = 0, wdy = 0;
 
             watermark = gdImageCreateFromPng(watermark_file);
+            fclose(watermark_file);
 
             if(watermark != NULL) {
                 watermark_mix = gdImageCreateTrueColor(watermark->sx, watermark->sy);
