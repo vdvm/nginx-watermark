@@ -549,7 +549,6 @@ ngx_http_image_process(ngx_http_request_t *r)
     }
 
     if (conf->filter == NGX_HTTP_IMAGE_WATERMARK) {
-
         if (!conf->watermark.data) {
             return NULL;
         }
@@ -796,6 +795,8 @@ ngx_http_image_resize(ngx_http_request_t *r, ngx_http_image_filter_ctx_t *ctx)
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_image_filter_module);
 
+
+
     if (!ctx->force
         && ctx->angle == 0
         && (ngx_uint_t) sx <= ctx->max_width
@@ -1010,7 +1011,6 @@ transparent:
             ngx_int_t wdx = 0, wdy = 0;
 
             watermark = gdImageCreateFromPng(watermark_file);
-            fclose(watermark_file);
 
             if(watermark != NULL) {
                 watermark_mix = gdImageCreateTrueColor(watermark->sx, watermark->sy);
@@ -1085,6 +1085,7 @@ transparent:
     b->last_buf = 1;
 
     ngx_http_image_length(r, b);
+    ngx_http_weak_etag(r);
 
     return b;
 }
@@ -1408,21 +1409,21 @@ ngx_http_image_filter(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
             return NGX_CONF_OK;
 
+
         } else if (ngx_strcmp(value[i].data, "watermark") == 0) {
             imcf->filter = NGX_HTTP_IMAGE_WATERMARK;
             imcf->watermark = value[2];
             return NGX_CONF_OK;
-
         } else {
             goto failed;
         }
     }
 
     if ((ngx_strcmp(value[i].data, "watermark") == 0) && cf->args->nelts == 4) {
-        imcf->filter = NGX_HTTP_IMAGE_WATERMARK;
-        imcf->watermark = value[2];
-        imcf->watermark_position = value[3];
-        return NGX_CONF_OK;
+            imcf->filter = NGX_HTTP_IMAGE_WATERMARK;
+            imcf->watermark = value[2];
+            imcf->watermark_position = value[3];
+            return NGX_CONF_OK;
     }
 
     if (ngx_strcmp(value[i].data, "resize") == 0) {
@@ -1495,8 +1496,8 @@ ngx_http_image_filter(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 failed:
 
-    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid parameter \"%V\"",
-                       &value[i]);
+    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid parameter \"%V\" (%d)",
+                       &value[i],cf->args->nelts);
 
     return NGX_CONF_ERROR;
 }
