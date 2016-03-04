@@ -22,4 +22,5 @@ Patch7:         nginx-watermark.patch
 %endif
 ...
 ```
+Tested with nginx 1.9.12
 
