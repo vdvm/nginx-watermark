@@ -1,7 +1,5 @@
 # Nginx HttpImageFilterModule with watermark support
 
-Tested with nginx 1.7.4
-
 ## Usage:
 
 ```
