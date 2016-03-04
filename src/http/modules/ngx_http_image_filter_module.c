@@ -1085,6 +1085,7 @@ transparent:
     b->last_buf = 1;
 
     ngx_http_image_length(r, b);
+    ngx_http_weak_etag(r);
 
     return b;
 }
