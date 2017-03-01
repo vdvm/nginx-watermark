@@ -73,6 +73,8 @@ typedef struct {
     ngx_uint_t                   max_width;
     ngx_uint_t                   max_height;
     ngx_uint_t                   angle;
+    ngx_str_t                    watermark;
+    ngx_str_t                    watermark_position;
 
     ngx_uint_t                   phase;
     ngx_uint_t                   type;
