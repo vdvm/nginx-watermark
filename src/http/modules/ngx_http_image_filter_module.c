@@ -106,6 +106,8 @@ static u_char *ngx_http_image_out(ngx_http_request_t *r, ngx_uint_t type,
 static void ngx_http_image_cleanup(void *data);
 static ngx_uint_t ngx_http_image_filter_get_value(ngx_http_request_t *r,
     ngx_http_complex_value_t *cv, ngx_uint_t v);
+static ngx_str_t ngx_http_image_filter_get_str_value(ngx_http_request_t *r,
+    ngx_http_complex_value_t *cv, ngx_str_t v);
 static ngx_uint_t ngx_http_image_filter_value(ngx_str_t *value);
 
 
@@ -552,8 +554,8 @@ ngx_http_image_process(ngx_http_request_t *r)
         return ngx_http_image_resize(r, ctx);
     }
 
-    ctx->watermark = ngx_http_image_filter_get_value(r, conf->wfcv, ctx->watermark);
-    ctx->watermark_position = ngx_http_image_filter_get_value(r, conf->wpcv, ctx->watermark_position);
+    ctx->watermark = ngx_http_image_filter_get_str_value(r, conf->wfcv, ctx->watermark);
+    ctx->watermark_position = ngx_http_image_filter_get_str_value(r, conf->wpcv, ctx->watermark_position);
 
     if (conf->filter == NGX_HTTP_IMAGE_WATERMARK) {
 
@@ -1234,6 +1236,23 @@ ngx_http_image_filter_get_value(ngx_http_request_t *r,
     }
 
     return ngx_http_image_filter_value(&val);
+}
+
+static ngx_str_t
+ngx_http_image_filter_get_str_value(ngx_http_request_t *r,
+    ngx_http_complex_value_t *cv, ngx_str_t v)
+{
+    ngx_str_t  val;
+
+    if (cv == NULL) {
+        return v;
+    }
+
+    if (ngx_http_complex_value(r, cv, &val) != NGX_OK) {
+        return v;
+    }
+
+    return val;
 }
 
 
