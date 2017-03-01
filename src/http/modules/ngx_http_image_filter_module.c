@@ -55,6 +55,8 @@ typedef struct {
     ngx_http_complex_value_t    *acv;
     ngx_http_complex_value_t    *jqcv;
     ngx_http_complex_value_t    *shcv;
+    ngx_http_complex_value_t    *wfcv;
+    ngx_http_complex_value_t    *wpcv;
 
     size_t                       buffer_size;
 } ngx_http_image_filter_conf_t;
@@ -548,9 +550,12 @@ ngx_http_image_process(ngx_http_request_t *r)
         return ngx_http_image_resize(r, ctx);
     }
 
+    ctx->watermark = ngx_http_image_filter_get_value(r, conf->wfcv, ctx->watermark);
+    ctx->watermark_position = ngx_http_image_filter_get_value(r, conf->wpcv, ctx->watermark_position);
+
     if (conf->filter == NGX_HTTP_IMAGE_WATERMARK) {
 
-        if (!conf->watermark.data) {
+        if (!ctx->watermark.data) {
             return NULL;
         }
 
@@ -1002,8 +1007,8 @@ transparent:
         gdImageColorTransparent(dst, gdImageColorExact(dst, red, green, blue));
     }
 
-    if (conf->filter == NGX_HTTP_IMAGE_WATERMARK && conf->watermark.data) {
-        FILE *watermark_file = fopen((const char *)conf->watermark.data, "r");
+    if (conf->filter == NGX_HTTP_IMAGE_WATERMARK && ctx->watermark.data) {
+        FILE *watermark_file = fopen((const char *)ctx->watermark.data, "r");
 
         if (watermark_file) {
             gdImagePtr watermark, watermark_mix;
@@ -1015,18 +1020,18 @@ transparent:
             if(watermark != NULL) {
                 watermark_mix = gdImageCreateTrueColor(watermark->sx, watermark->sy);
 
-                if (ngx_strcmp(conf->watermark_position.data, "bottom-right") == 0) {
+                if (ngx_strcmp(ctx->watermark_position.data, "bottom-right") == 0) {
                     wdx = dx - watermark->sx - 10;
                     wdy = dy - watermark->sy - 10;
-                } else if (ngx_strcmp(conf->watermark_position.data, "top-left") == 0) {
+                } else if (ngx_strcmp(ctx->watermark_position.data, "top-left") == 0) {
                     wdx = wdy = 10;
-                } else if (ngx_strcmp(conf->watermark_position.data, "top-right") == 0) {
+                } else if (ngx_strcmp(ctx->watermark_position.data, "top-right") == 0) {
                     wdx = dx - watermark->sx - 10;
                     wdy = 10;
-                } else if (ngx_strcmp(conf->watermark_position.data, "bottom-left") == 0) {
+                } else if (ngx_strcmp(ctx->watermark_position.data, "bottom-left") == 0) {
                     wdx = 10;
                     wdy = dy - watermark->sy - 10;
-                } else if (ngx_strcmp(conf->watermark_position.data, "center") == 0) {
+                } else if (ngx_strcmp(ctx->watermark_position.data, "center") == 0) {
                     wdx = dx / 2 - watermark->sx / 2;
                     wdy = dy / 2 - watermark->sy / 2;
                 }
@@ -1037,11 +1042,11 @@ transparent:
                 gdImageDestroy(watermark);
                 gdImageDestroy(watermark_mix);
 
-            } else { ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "watermark file '%s' is not PNG", conf->watermark.data);}
+            } else { ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "watermark file '%s' is not PNG", ctx->watermark.data);}
 
         } else {
 
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "watermark file '%s' not found", conf->watermark.data);
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "watermark file '%s' not found", ctx->watermark.data);
         }
     }
 
